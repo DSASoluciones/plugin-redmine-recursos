@@ -1,0 +1,226 @@
+<% html_title "Recursos" %>
+
+</br>
+<%= form_tag("calendario", method: "post", :action => 'index', class: "form-horizontal") do %>
+	<div class="form-group">
+		<%= label_tag(:u, "Usuario:", class:"control-label col-lg-1 col-lg-offset-1") %>
+		<div class="col-lg-2">
+			<%= select_tag(:usuario, options_from_collection_for_select(@usuarios_peticiones_total, :id, :login, @usuario_select), class:"form-control", multiple: true) %>
+		</div>
+
+		<%= label_tag(:p, "Fecha Inicio:", class:"control-label col-lg-1") %>
+		<div class="col-lg-2">
+			<%= text_field_tag :fecha_inicio, @fecha_ini_form, type: :date, class:"form-control" %>
+		</div>
+
+		<%= label_tag(:q, "Fecha Fin:", class:"control-label col-lg-1") %>
+		<div class="col-lg-2">
+			<%= text_field_tag :fecha_fin, @fecha_fin_form, type: :date, class:"form-control" %>
+		</div>
+		<%= submit_tag("Aceptar", class:"btn btn-primary col-lg-1") %>
+
+	</div>
+<% end %>
+</br>
+
+<div class="row">
+	<% for i in 0..@num_usuarios %>
+		<% if (@arreglo_actividades[i].length - 1) >= 0 %>
+			<div class="col-md-12">
+				<table class="table table-bordered table-hover">
+					<thead>
+						<tr>
+							<th class="info"><%= @usuarios[i] %></th>
+							<% @fecha_contador = @fecha_ini_form %>
+							<% while @fecha_contador <= @fecha_fin_form %>
+								<th><%= (@fecha_contador).strftime("%A %d/%m/%Y") %></th>
+								<% @fecha_contador+=1.day %>
+								<% if @fecha_contador.saturday?
+									@fecha_contador+=2.day
+								end %>
+							<% end %>
+						</tr>
+					</thead>
+					<tbody>
+						<% @num_actividades = @arreglo_actividades[i].length - 1 %>
+						<% 
+							@arreglo_horas_totales = Array.new(@dias_mostrados, 0)
+						%>
+						<% for j in 0..@num_actividades %>
+							<tr>
+								<% if (@arreglo_fecha_inicio[i][j] < @fecha_ini_form) && (@arreglo_fecha_fin[i][j] > @fecha_fin_form) %>
+									<th><%= @arreglo_actividades[i][j] %></th>
+									<% for k in 0..(@dias_mostrados - 1) %>
+										<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+											<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+										<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+											<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+										<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+											<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+										<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+											<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+										<% end %>
+										<% @arreglo_horas_totales[k] += @arreglo_horas_por_dia[i][j] %>
+									<% end %>
+									<% 
+									%>
+								<% end %>
+
+								<% if (@fecha_ini_form) <= (@arreglo_fecha_inicio[i][j]) && (@arreglo_fecha_inicio[i][j]) <= (@fecha_fin_form) && (@arreglo_fecha_fin[i][j]) > (@fecha_fin_form) %>
+									<th><%= @arreglo_actividades[i][j] %></th>
+									<% @dias_godinez = business_days_between(@fecha_ini_form, @arreglo_fecha_inicio[i][j])
+									%>
+									<% if @dias_godinez == 0 %>
+										<% for l in 0..(@dias_mostrados - 1) %>
+											<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+												<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+												<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+												<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+												<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% end %>
+											<% @arreglo_horas_totales[l] += @arreglo_horas_por_dia[i][j] %>
+										<% end %>
+									<% else %>
+										<% for m in 0..(@dias_godinez -1) %>
+											<td>0</td>
+										<% end %>
+										<% for n in 0..((@dias_mostrados - @dias_godinez) - 1) %>	
+											<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+												<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+												<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+												<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+												<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% end %>
+											<% @arreglo_horas_totales[@dias_godinez + n] += @arreglo_horas_por_dia[i][j] %>
+										<% end %>
+									<% end %>
+								<% end %>
+
+								<% if ((@fecha_fin_form) >= (@arreglo_fecha_fin[i][j])) && ((@arreglo_fecha_fin[i][j]) >= (@fecha_ini_form)) && ((@arreglo_fecha_inicio[i][j]) < (@fecha_ini_form)) %>
+									<th><%= @arreglo_actividades[i][j] %></th>
+									<% @dias_godinez = business_days_between(@arreglo_fecha_fin[i][j], @fecha_fin_form)
+									%>
+									<% if @dias_godinez == 0 %>
+										<% for o in 0..(@dias_mostrados - 1) %>
+											<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+												<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+												<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+												<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+												<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% end %>
+											<% @arreglo_horas_totales[o] += @arreglo_horas_por_dia[i][j] %>
+										<% end %>
+									<% else %>
+										<% for p in 0..((@dias_mostrados - @dias_godinez) - 1) %>	
+											<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+												<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+												<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+												<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+												<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% end %>
+											<% @arreglo_horas_totales[p] += @arreglo_horas_por_dia[i][j] %>
+										<% end %>
+										<% for q in 0..(@dias_godinez -1) %>
+											<td>0</td>
+										<% end %>
+									<% end %>
+								<% end %>
+
+								<% if (@fecha_ini_form) <= (@arreglo_fecha_inicio[i][j]) && (@arreglo_fecha_inicio[i][j]) <= (@fecha_fin_form) && (@fecha_fin_form) >= (@arreglo_fecha_fin[i][j]) && (@arreglo_fecha_fin[i][j]) >= (@fecha_ini_form) %>
+									<th><%= @arreglo_actividades[i][j] %></th>
+									<% @dias_godinez_inicio = business_days_between(@fecha_ini_form, @arreglo_fecha_inicio[i][j])
+									%>
+									<% @dias_godinez_fin = business_days_between(@arreglo_fecha_fin[i][j], @fecha_fin_form)
+									%>
+									<% @dias_productivos = @dias_mostrados - (@dias_godinez_fin + @dias_godinez_inicio) %>
+									<% if @dias_productivos != @dias_mostrados %>
+										<% if @dias_godinez_inicio == 0 %>
+											<% for r in 0..(@dias_productivos -1) %>
+												<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+													<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+													<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+													<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+													<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% end %>
+												<% @arreglo_horas_totales[r] += @arreglo_horas_por_dia[i][j] %>
+											<% end %>
+										<% else %>
+											<% for s in 0..(@dias_godinez_inicio -1) %>
+												<td>0</td>
+											<% end %>
+											<% for t in 0..(@dias_productivos - 1) %>	
+												<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+													<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+													<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+													<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+													<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+												<% end %>
+												<% @arreglo_horas_totales[@dias_godinez_inicio + t] += @arreglo_horas_por_dia[i][j] %>
+											<% end %>
+										<% end %>
+										<% if @dias_godinez_fin != 0 %>
+											<% for u in 0..(@dias_godinez_fin - 1) %>	
+												<td>0</td>
+											<% end %>
+										<% end %>
+									<% else %>
+										<% for v in 0..(@dias_mostrados - 1) %>	
+											<% if @arreglo_horas_por_dia[i][j] <= 5 %>
+												<td class="danger"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] == 6 %>
+												<td class="warning"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] >= 7 && @arreglo_horas_por_dia[i][j] <= 8 %>	
+												<td class="success"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% elsif  @arreglo_horas_por_dia[i][j] > 8 %>	
+												<td class="morado"><%= @arreglo_horas_por_dia[i][j] %></td>
+											<% end %>
+											<% @arreglo_horas_totales[v] += @arreglo_horas_por_dia[i][j] %>
+										<% end %>
+									<% end %>									
+								<% end %>
+							</tr>
+						<% end %>
+						<tr>
+							<th class="info">Total</th>
+							<% @arreglo_horas_totales.each do |hora| %>
+								<td><%= hora %></td>
+							<% end %>
+						</tr>
+					</tbody>
+				</table>
+				</br>
+			</div>
+		<% else %>
+			<% @verifica_actividades += 1 %>
+		<% end %>
+	<% end %>
+	<% if @verifica_actividades == @usuarios.length %>
+		<p><h4 align="center">Los usuarios seleccionados no tienen actividades entre las fechas establecidas</h4></p>
+	<% else %>
+		
+	<% end %>
+</div>
+
+</br>
+
+<% content_for :header_tags do %>
+    <%= stylesheet_link_tag 'calendario', :plugin => 'recursos' %>
+<% end %>
